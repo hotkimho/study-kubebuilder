@@ -32,7 +32,7 @@ type CronJobSpec struct {
 
 	// +kubebuilder:validation:MinLength=0
 	// cron 형식의 값 (예: "* * * * *")
-	Schedule string `Json:"schedule"`
+	Schedule string `json:"schedule"`
 
 	// +kubebuilder:validation:minimum=0
 	// +optional
@@ -44,7 +44,7 @@ type CronJobSpec struct {
 	// -"Allow" : 작업이 동시에 실행될 수 있음
 	// -"Forbid" : 작업이 동시에 실행될 수 없음
 	// -"Replace" : 새 작업이 실행되면 이전 작업이 종료됨
-	ConcurrencyPolicy batchv1.ConcurrencyPolicy `json:"concurrencyPolicy,omitempty"`
+	ConcurrencyPolicy ConcurrencyPolicy `json:"concurrencyPolicy,omitempty"`
 
 	// +optional
 	// 작업이 중지되는 경우 다음 작업을 계속할지 여부
@@ -64,6 +64,21 @@ type CronJobSpec struct {
 	// 유지할 실패한 작업의 수
 	FailedJobsHistoryLimit *int32 `json:"failedJobsHistoryLimit,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=Allow;Forbid;Replace
+type ConcurrencyPolicy string
+
+const (
+	// AllowConcurrent allows CronJobs to run concurrently.
+	AllowConcurrent ConcurrencyPolicy = "Allow"
+
+	// ForbidConcurrent forbids concurrent runs, skipping next run if previous
+	// hasn't finished yet.
+	ForbidConcurrent ConcurrencyPolicy = "Forbid"
+
+	// ReplaceConcurrent cancels currently running job and replaces it with a new one.
+	ReplaceConcurrent ConcurrencyPolicy = "Replace"
+)
 
 // CronJobStatus defines the observed state of CronJob
 type CronJobStatus struct {
