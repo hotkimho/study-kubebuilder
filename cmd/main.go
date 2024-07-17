@@ -19,7 +19,9 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -96,8 +98,18 @@ func main() {
 		TLSOpts: tlsOpts,
 	})
 
+	namespaces := []string{"default"}
+	defaultNamespaces := make(map[string]cache.Config)
+
+	for _, ns := range namespaces {
+		defaultNamespaces[ns] = cache.Config{}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
+		Cache: cache.Options{
+			DefaultNamespaces: defaultNamespaces,
+		},
 		// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
 		// More info:
 		// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.4/pkg/metrics/server
@@ -146,12 +158,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CronJob")
 		os.Exit(1)
 	}
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "CronJob")
-			os.Exit(1)
-		}
-	}
+
+	//if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	//	if err = (&batchv1.CronJob{}).SetupWebhookWithManager(mgr); err != nil {
+	//		setupLog.Error(err, "unable to create webhook", "webhook", "CronJob")
+	//		os.Exit(1)
+	//	}
+	//}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -168,4 +181,5 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+	fmt.Println("end")
 }

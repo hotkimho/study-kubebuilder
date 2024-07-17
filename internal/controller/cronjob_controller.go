@@ -78,6 +78,9 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// TODO(user): your logic here
 
+	fmt.Println("req name: ", req.Name)
+	fmt.Println("req namespace: ", req.Namespace)
+	fmt.Println("req name/space: ", req.NamespacedName)
 	isJobFinished := func(job *kbatch.Job) (bool, kbatch.JobConditionType) {
 		for _, c := range job.Status.Conditions {
 			if c.Type == kbatch.JobComplete || c.Type == kbatch.JobFailed &&
@@ -119,7 +122,6 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// 2-1 활성, 성공, 실패 잡 처리
-
 	for i, job := range childJobs.Items {
 		_, finishedType := isJobFinished(&job)
 
@@ -327,8 +329,6 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	log.V(1).Info("created job for cronjob run", "job", job)
-
-	// 실행 중인 job 확인 및 큐에 쌓기
 
 	return scheduleResult, nil
 }
