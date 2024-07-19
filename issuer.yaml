@@ -1,0 +1,9 @@
+# issuer.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: webhook-issuer
+  namespace: kb-system
+spec:
+  selfSigned: {}
+

@@ -1,0 +1,9 @@
+apiVersion: batch.tutorial.kubebuilder.io/v1
+kind: TestPod
+metadata:
+  labels:
+    app.kubernetes.io/name: kb
+    app.kubernetes.io/managed-by: kustomize
+  name: testpod-sample
+spec:
+  # TODO(user): Add fields here

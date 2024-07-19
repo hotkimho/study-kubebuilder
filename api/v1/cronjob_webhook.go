@@ -17,7 +17,6 @@ limitations under the License.
 package v1
 
 import (
-	"fmt"
 	"github.com/robfig/cron"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -76,7 +75,6 @@ func (r *CronJob) Default() {
 var _ webhook.Validator = &CronJob{}
 
 func (r *CronJob) validateCronJob() error {
-	fmt.Println("[validateCronJob] validate cronjob")
 	var allErrs field.ErrorList
 	if err := r.validateCronJobName(); err != nil {
 		allErrs = append(allErrs, err)

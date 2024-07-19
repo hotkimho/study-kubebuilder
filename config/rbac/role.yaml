@@ -48,3 +48,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - batch.tutorial.kubebuilder.io
+  resources:
+  - testpods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch.tutorial.kubebuilder.io
+  resources:
+  - testpods/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - batch.tutorial.kubebuilder.io
+  resources:
+  - testpods/status
+  verbs:
+  - get
+  - patch
+  - update

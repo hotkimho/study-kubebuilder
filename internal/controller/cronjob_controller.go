@@ -78,9 +78,6 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// TODO(user): your logic here
 
-	fmt.Println("req name: ", req.Name)
-	fmt.Println("req namespace: ", req.Namespace)
-	fmt.Println("req name/space: ", req.NamespacedName)
 	isJobFinished := func(job *kbatch.Job) (bool, kbatch.JobConditionType) {
 		for _, c := range job.Status.Conditions {
 			if c.Type == kbatch.JobComplete || c.Type == kbatch.JobFailed &&
