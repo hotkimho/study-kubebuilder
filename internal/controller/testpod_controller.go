@@ -19,10 +19,9 @@ package controller
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -54,43 +53,83 @@ type TestPodReconciler struct {
 func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	fmt.Println("Reconcile TestPod")
+	//var testPod batchv1.TestPod
+	//if err := r.Get(ctx, req.NamespacedName, &testPod); err != nil {
+	//	log.Log.Error(err, "unable to fetch TestPod")
+	//	return ctrl.Result{}, client.IgnoreNotFound(err)
+	//}
+	//
+	//testPod.Status.Phase = "Pending"
+	//if err := r.Status().Update(ctx, &testPod); err != nil {
+	//	log.Log.Error(err, "unable to update TestPod status")
+	//	return ctrl.Result{}, err
+	//}
+
 	var testPod batchv1.TestPod
 	if err := r.Get(ctx, req.NamespacedName, &testPod); err != nil {
 		log.Log.Error(err, "unable to fetch TestPod")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	testPod.Status.Phase = "Pending"
+	switch testPod.Status.Phase {
+	case "":
+		testPod.Status.Phase = "Pending"
+	case "Pending":
+		testPod.Status.Phase = "Running"
+	case "Running":
+		testPod.Status.Phase = "Succeeded"
+	default:
+		// do error handling
+	}
 	if err := r.Status().Update(ctx, &testPod); err != nil {
 		log.Log.Error(err, "unable to update TestPod status")
 		return ctrl.Result{}, err
 	}
-
-	newTestPod := batchv1.TestPod{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "default",
-			Name:      "testpod-1",
-		},
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "TestPod",
-			APIVersion: "v1",
-		},
-		Spec: batchv1.TestPodSpec{
-			Replicas: 3,
-			Creator:  "hoho",
-		},
-		Status: batchv1.TestPodStatus{},
-	}
-	newTestPod.Status.Phase = "Running"
-	if err := r.Create(ctx, &newTestPod); err != nil {
-		fmt.Println("TestPod Create Error ", err)
-		return ctrl.Result{}, err
-	}
-
-	fmt.Println("TestPod Create Success")
-
-	time.Sleep(10 * time.Second)
+	//
+	//newTestPod := batchv1.TestPod{
+	//	ObjectMeta: metav1.ObjectMeta{
+	//		Namespace: "default",
+	//		Name:      "testpod-example-1",
+	//	},
+	//	TypeMeta: metav1.TypeMeta{
+	//		Kind:       "TestPod",
+	//		APIVersion: "v1",
+	//	},
+	//	Spec: batchv1.TestPodSpec{
+	//		Replicas: 3,
+	//		Creator:  "kimho",
+	//	},
+	//	Status: batchv1.TestPodStatus{},
+	//}
+	//newTestPod.Status.Phase = "Running"
+	//if err := r.Create(ctx, &newTestPod); err != nil {
+	//	log.Log.Error(err, "unable to create TestPod")
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//newTestPod2 := batchv1.TestPod{
+	//	ObjectMeta: metav1.ObjectMeta{
+	//		Namespace: "default",
+	//		Name:      "testpod-example-1",
+	//	},
+	//	TypeMeta: metav1.TypeMeta{
+	//		Kind:       "TestPod",
+	//		APIVersion: "v1",
+	//	},
+	//	Spec: batchv1.TestPodSpec{
+	//		Replicas: 3,
+	//		Creator:  "kimho",
+	//	},
+	//	Status: batchv1.TestPodStatus{},
+	//}
+	//
+	//newTestPod2.Status.Phase = ""
+	//if err := r.Create(ctx, &newTestPod2); err != nil {
+	//	log.Log.Error(err, "unable to create TestPod")
+	//	return ctrl.Result{}, err
+	//}
+	//
+	//time.Sleep(10 * time.Second)
 	return ctrl.Result{}, nil
 }
 
@@ -107,19 +146,17 @@ func (r *TestPodReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func createPredicate(e event.CreateEvent) bool {
-	fmt.Println("create predicate ")
-	testPod := e.Object.(*batchv1.TestPod)
+	createdTestPod := e.Object.(*batchv1.TestPod)
 
-	fmt.Println("create predicate ", testPod.Spec.Creator)
-	if testPod.Spec.Creator == "hoho" {
-		fmt.Println("wow it's hoho")
+	// 이름을 검사하여 특정 이름의 리소스만 처리
+	if createdTestPod.Name != "testpod-example-1" {
 		return false
 	}
 
-	return false
+	// 리소스 이벤트 핸들러에 전달
+	return true
 }
 func updatePredicate(e event.UpdateEvent) bool {
-	fmt.Println("update predicate ")
 
 	oldTestPod := e.ObjectNew.(*batchv1.TestPod)
 	newTestPod := e.ObjectNew.(*batchv1.TestPod)
