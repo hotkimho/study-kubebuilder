@@ -17,7 +17,6 @@ limitations under the License.
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,11 +28,6 @@ type EventTriggerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of EventTrigger. Edit eventtrigger_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-	v1.Volume
-	v1.Pod
-
 	ResourceEvents []ResourceEvent `json:"resourceEvents,omitempty"`
 }
 
@@ -41,70 +35,254 @@ type EventTriggerSpec struct {
 type EventTriggerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	ResourceStatus []ResourceStatus `json:"resourceStatus,omitempty"`
+}
+
+type ResourceStatus struct {
+	// +kubeubuilder:validation:MinLength=0
+	// 리소스 이름
+	Name string `json:"name"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 리소스 종류
+	Kind string `json:"kind"`
+
+	// +optional
+	// 리소스에 대한 상태
+	Conditions []ConditionStatus `json:"conditions"`
+
+	// +optional
+	// 마지막으로 알림을 전송한 시간
+	LastNotificationTime metav1.Time `json:"lastNotificationTime"`
+
+	// +optional
+	// 알림을 처음 전송한 시간
+	FirstNotificationTime metav1.Time `json:"firstNotificationTime"`
+
+	// +kubeubuilder:defualt=0
+	NotificationCount int `json:"notificationCount"`
+}
+
+type ConditionStatus struct {
+	// +kubeubuilder:validation:MinLength=0
+	// 검사한 필드명
+	Field string `json:"field"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 비교 연산자 ex) equal, notEqual, lessThan, greaterThan
+	Operator string `json:"operator"`
+
+	// +optional
+	// 현재 리소스의 상태
+	Status *string `json:"status,omitempty"`
+
+	// +optional
+	// 현재 리소스의 값(수치)
+	Value *string `json:"value,omitempty"`
+
+	// 현재 리소스의 상태와 조건이 일치하는지 여부(true, false)
+	Result string `json:"result"`
 }
 
 type ResourceEvent struct {
+	// +kubeubuilder:validation:MinLength=0
+	// 리소스 버전
+	apiVersion string `json:"apiVersion"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 리로스 종류(kind)
+	kind string `json:"kind"`
+
+	// 이벤트 리소스 오브젝트(POD, Deployment, ClusterInfo, Event)
 	EventSource `json:",inline"`
 }
 
 type EventSource struct {
-	Pod         *PodEvent         `json:"pod,omitempty"`
-	Deployment  *DeploymentEvent  `json:"deployment,omitempty"`
+	// +optional
+	// 파드 리소스에 대한 trigger
+	Pod *PodEvent `json:"pod,omitempty"`
+
+	// +optional
+	// 디플로이먼트 리소스에 대한 trigger
+	Deployment *DeploymentEvent `json:"deployment,omitempty"`
+
+	// +optional
+	// 클러스터 정보 리소스에 대한 trigger
 	ClusterInfo *ClusterInfoEvent `json:"clusterInfo,omitempty"`
+
+	// +optional
+	// 이벤트 리소스에 대한 trigger
+	Event *K8sEvent `json:"event,omitempty"`
 }
 
 type PodEvent struct {
-	Resource      EventResource    `json:"resource,omitempty"`
-	Conditions    []EventCondition `json:"conditions"`
-	Message       EventMessage     `json:"message"`
-	Notifications []Notification   `json:"notifications"`
+	// 리소스 정보
+	Resource EventResource `json:"resource,omitempty"`
+
+	// 조건 목록(status, value)
+	Conditions []EventCondition `json:"conditions"`
+
+	// 메시지 정보
+	Message EventMessage `json:"message"`
+
+	// 전송할 매체(matterMost, Gmail) 정보
+	Notifications []Notification `json:"notifications"`
 }
 
 type DeploymentEvent struct {
-	Resource      EventResource    `json:"resource,omitempty"`
-	Conditions    []EventCondition `json:"conditions"`
-	Message       EventMessage     `json:"message"`
-	Notifications []Notification   `json:"notifications"`
+	// 리소스 정보
+	Resource EventResource `json:"resource,omitempty"`
+
+	// 조건 목록(status, value)
+	Conditions []EventCondition `json:"conditions"`
+
+	// 메시지 정보
+	Message EventMessage `json:"message"`
+
+	// 전송할 매체(matterMost, Gmail) 정보
+	Notifications []Notification `json:"notifications"`
 }
 
 type ClusterInfoEvent struct {
-	Resource      EventResource    `json:"resource,omitempty"`
-	Conditions    []EventCondition `json:"conditions"`
-	Message       EventMessage     `json:"message"`
-	Notifications []Notification   `json:"notifications"`
+	// 리소스 정보
+	Resource EventResource `json:"resource,omitempty"`
+
+	// 조건 목록(status, value)
+	Conditions []EventCondition `json:"conditions"`
+
+	// 메시지 정보
+	Message EventMessage `json:"message"`
+
+	// 전송할 매체(matterMost, Gmail) 정보
+	Notifications []Notification `json:"notifications"`
+}
+
+type K8sEvent struct {
+	// 리소스 정보
+	Resource EventResource `json:"resource,omitempty"`
+
+	// 조건 목록(status, value)
+	Conditions []EventCondition `json:"conditions"`
+
+	// 메시지 정보
+	Message EventMessage `json:"message"`
+
+	// 전송할 매체(matterMost, Gmail) 정보
+	Notifications []Notification `json:"notifications"`
 }
 
 type EventResource struct {
-	Namespace string            `json:"namespace"`
-	Name      string            `json:"name"`
-	Labels    map[string]string `json:"labels,omitempty"`
+	// +kubebuilder:default=default
+	// 리소스가 속한 네임스페이스
+	Namespace string `json:"namespace"`
+
+	// +kubebuiler:validation:MinLength=0
+	// 리소스 이름
+	Name string `json:"name"`
+
+	// 리소스 레이블
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+type ValueCondition struct {
+	// +kubeubuilder:validation:MinLength=0
+	// 검사할 필드명
+	Field string `json:"field"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 비교 연산자 ex) equal, notEqual, lessThan, greaterThan
+	Operator string `json:"operator"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 비교할 값(수치)
+	Value string `json:"value"`
+}
+
+type StatusCondition struct {
+	// +kubeubuilder:validation:MinLength=0
+	// 검사할 필드명
+	Field string `json:"field"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 비교 연산자 ex) equal, notEqual, Pending, Running, Succeeded, Failed, Unknown
+	Operator string `json:"operator"`
+
+	// +kubeubuilder:validation:MinLength=0
+	// 비교할 상태
+	Status string `json:"status"`
 }
 
 type EventCondition struct {
-	Field    string `json:"field"`
-	Operator string `json:"operator"`
-	Value    string `json:"value"`
+	// +optional
+	// 값에 대한 조건
+	ValueCondition *ValueCondition `json:"valueCondition,omitempty"`
+
+	// +optional
+	// 상태에 대한 조건
+	StatusCondition *StatusCondition `json:"statusCondition,omitempty"`
 }
 
 type EventMessage struct {
-	Level   string `json:"level"`
-	Message string `json:"message"`
+	// +kubeubuilder:validation:MinLength=0
+	// 로그 레벨 ex) info, warning, error
+	Level string `json:"level"`
+
+	// +optional
+	// 알림 매체에 보낼 메시지 내용
+	Message *string `json:"message"`
 }
 
 type Notification struct {
-	Type        string  `json:"type"`
-	URL         *string `json:"url,omitempty"`
-	SMTPServer  *string `json:"smtpServer,omitempty"`
-	SMTPPort    *int    `json:"smtpPort,omitempty"`
-	Username    *string `json:"username,omitempty"`
-	Password    *string `json:"password,omitempty"`
+	// +kubeubuilder:validation:MinLength=0
+	// 매체 종류(mattermost, gmail)
+	Type string `json:"type"`
+
+	// +optional
+	// 매체 URL(webhook URL)
+	URL *string `json:"url,omitempty"`
+
+	// +optional
+	// 매체 채널
+	Channel *string `json:"channel,omitempty"`
+
+	// +optional
+	// SMTP 서버 주소
+	SMTPServer *string `json:"smtpServer,omitempty"`
+
+	// +optional
+	// SMTP 포트
+	SMTPPort *int `json:"smtpPort,omitempty"`
+
+	// +optional
+	// mail 계정 사용자 이름
+	Username *string `json:"username,omitempty"`
+
+	// +optional
+	// mail 계정 비밀번호
+	Password *string `json:"password,omitempty"`
+
+	// +optional
+	// 발신자 메일 주소
 	FromAddress *string `json:"fromAddress,omitempty"`
-	ToAddress   *string `json:"toAddress,omitempty"`
-	Subject     *string `json:"subject,omitempty"`
-	Message     *string `json:"message,omitempty"`
+
+	// +optional
+	// 수신자 메일 주소
+	ToAddress *string `json:"toAddress,omitempty"`
+
+	// +optional
+	// 메일 제목
+	Subject *string `json:"subject,omitempty"`
+
+	// +optional
+	// 메일 내용
+	Message *string `json:"message,omitempty"`
 }
 
-// EventTrigger is the Schema for the eventtriggers API
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+
 type EventTrigger struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

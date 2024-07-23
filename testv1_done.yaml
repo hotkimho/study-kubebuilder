@@ -4,7 +4,9 @@ metadata:
   name: test-trigger
 spec:
   resourceEvents:
-  - event:
+  - apiVersion: v1
+    kind: event
+    event:
       resource:
         namespace: default
         name: ""
@@ -17,12 +19,14 @@ spec:
       message:
         level: warning
         message: "message"
-      notification:
+      notifications:
       - type: mattermost
         url: "mattermost-webhook-url"
 
     # case 2 ClusterInfo의 status.phase 필드가 NotReady로 변경된 경우
-  - clusterInfo:
+  - apiVersion: v1
+    kind: clusterInfo
+    clusterInfo:
       resource:
         namespace: default
         name: ""
@@ -35,7 +39,7 @@ spec:
       message:
         level: error
         message: "message"
-      notification:
+      notifications:
       - type: gmail
         smtpServer: smtp-server
         smtpPort: 587
@@ -43,7 +47,9 @@ spec:
         password: userPassword
         fromAddress:
     # case 3 acc-system namespace에서 member-agent라는 이름의 Deployment의 image 필드가 특정 버전 보다 낮은 경우
-  - deployment:
+  - apiVersion: apps/v1
+    kind: deployment
+    deployment:
       resource:
         namespace: acc-system
         name: member-agent
@@ -56,12 +62,13 @@ spec:
       message:
         level: info
         message: "message"
-      notification:
+      notifications:
       - type: mattermost
         url: "mattermost-webhook-url"
     # case 4 acc-global namespace에서 app: gateway 라벨을 가진 Pod의 status.phase 필드가 Running이 아닌 경우
-
-  - pod:
+  - apiVersion: v1
+    kind: pod
+    pod:
       resource:
         namespace: acc-global
         labels:
@@ -73,7 +80,7 @@ spec:
       message:
         level: error
         message: "message"
-      notification:
+      notifications:
       - type: mattermost
         url: "mattermost-webhook-url"
     # case 4 acc-global namespace에서 app: gateway 라벨을 가진 Pod의 status.phase 필드가 Running이 아닌 경우
