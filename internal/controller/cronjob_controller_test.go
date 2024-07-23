@@ -18,16 +18,20 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	batchv1 "tutorial.kubebuilder.io/project/api/v1"
+	batchv1 "k8s.io/api/batch/v1"
+
+	cronjobv1 "tutorial.kubebuilder.io/project/api/v1"
 )
 
 var _ = Describe("CronJob Controller", func() {
@@ -79,6 +83,58 @@ var _ = Describe("CronJob Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
 			// Example: If you expect a certain status condition after reconciliation, verify it here.
+		})
+	})
+})
+
+var _ = Describe("CronJob controller", func() {
+
+	// Define utility constants for object names and testing timeouts/durations and intervals.
+	const (
+		CronjobName      = "test-cronjob"
+		CronjobNamespace = "default"
+		JobName          = "test-job"
+
+		timeout  = time.Second * 10
+		duration = time.Second * 10
+		interval = time.Millisecond * 250
+	)
+
+	Context("When updating CronJob Status", func() {
+		It("Should increase CronJob Status.Active count when new Jobs are created", func() {
+			By("By creating a new CronJob")
+			ctx := context.Background()
+			cronJob := &cronjobv1.CronJob{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "batch.tutorial.kubebuilder.io/v1",
+					Kind:       "CronJob",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      CronjobName,
+					Namespace: CronjobNamespace,
+				},
+				Spec: cronjobv1.CronJobSpec{
+					Schedule: "1 * * * *",
+					JobTemplate: batchv1.JobTemplateSpec{
+						Spec: batchv1.JobSpec{
+							// For simplicity, we only fill out the required fields.
+							Template: v1.PodTemplateSpec{
+								Spec: v1.PodSpec{
+									// For simplicity, we only fill out the required fields.
+									Containers: []v1.Container{
+										{
+											Name:  "test-container",
+											Image: "test-image",
+										},
+									},
+									RestartPolicy: v1.RestartPolicyOnFailure,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, cronJob)).Should(Succeed())
 		})
 	})
 })
