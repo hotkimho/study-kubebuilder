@@ -2,4 +2,5 @@
 resources:
 - batch_v1_cronjob.yaml
 - batch_v1_testpod.yaml
+- batch_v1_eventtrigger.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

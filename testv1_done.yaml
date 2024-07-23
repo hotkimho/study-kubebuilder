@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: TestTrigger
+metadata:
+  name: test-trigger
+spec:
+  resourceEvents:
+  - event:
+      resource:
+        namespace: default
+        name: ""
+        labels:
+          app: gateway
+      conditions:
+      - field: type
+        operator: Equals
+        value: Warning
+      message:
+        level: warning
+        message: "message"
+      notification:
+      - type: mattermost
+        url: "mattermost-webhook-url"
+
+    # case 2 ClusterInfo의 status.phase 필드가 NotReady로 변경된 경우
+  - clusterInfo:
+      resource:
+        namespace: default
+        name: ""
+        labels:
+          app: gateway
+      conditions:
+      - field: status.phase
+        operator: Equals
+        value: NotReady
+      message:
+        level: error
+        message: "message"
+      notification:
+      - type: gmail
+        smtpServer: smtp-server
+        smtpPort: 587
+        username: userEmail
+        password: userPassword
+        fromAddress:
+    # case 3 acc-system namespace에서 member-agent라는 이름의 Deployment의 image 필드가 특정 버전 보다 낮은 경우
+  - deployment:
+      resource:
+        namespace: acc-system
+        name: member-agent
+        labels:
+          app: gateway
+      conditions:
+      - field: spec.template.spec.containers[0].image
+        operator: LessThan
+        value: "image-version"
+      message:
+        level: info
+        message: "message"
+      notification:
+      - type: mattermost
+        url: "mattermost-webhook-url"
+    # case 4 acc-global namespace에서 app: gateway 라벨을 가진 Pod의 status.phase 필드가 Running이 아닌 경우
+
+  - pod:
+      resource:
+        namespace: acc-global
+        labels:
+        app: gateway
+      conditions:
+      - field: status.phase
+        operator: NotEquals
+        value: Running
+      message:
+        level: error
+        message: "message"
+      notification:
+      - type: mattermost
+        url: "mattermost-webhook-url"
+    # case 4 acc-global namespace에서 app: gateway 라벨을 가진 Pod의 status.phase 필드가 Running이 아닌 경우
+
+status:
+  # 리소스 상태
+  resourceStatuses:
+  - name: <resource-name>
+    kind: <kind>
+    status: <현재 리소스 상태>
+    reported: <boolean(알림 전송 성공/실패)>
+    lastReportTime : <마지막 알림 전송 시간>
+    firstReportTime : <첫 알림 전송 시간>
+

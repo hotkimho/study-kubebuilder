@@ -159,10 +159,7 @@ func createPredicate(e event.CreateEvent) bool {
 func updatePredicate(e event.UpdateEvent) bool {
 
 	oldTestPod := e.ObjectNew.(*batchv1.TestPod)
-	newTestPod := e.ObjectNew.(*batchv1.TestPod)
 
-	fmt.Println("old predicate ", oldTestPod.Spec.Creator)
-	fmt.Println("new predicate ", newTestPod.Spec.Creator)
 	if oldTestPod.Spec.Creator == "hoho" {
 		fmt.Println("wow it's hoho")
 		return false

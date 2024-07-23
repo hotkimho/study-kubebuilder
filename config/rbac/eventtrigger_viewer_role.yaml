@@ -1,0 +1,23 @@
+# permissions for end users to view eventtriggers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kb
+    app.kubernetes.io/managed-by: kustomize
+  name: eventtrigger-viewer-role
+rules:
+- apiGroups:
+  - batch.tutorial.kubebuilder.io
+  resources:
+  - eventtriggers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch.tutorial.kubebuilder.io
+  resources:
+  - eventtriggers/status
+  verbs:
+  - get
