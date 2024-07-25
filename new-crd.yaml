@@ -57,7 +57,7 @@ status:
     reason:
   resourceStatus: # 각각의 리소스에 대한 정보
   - name: resource-name
-    resourceVersion: resource-versiom
+    resourceVersion: resource-version
     notificationSent: 전송 여부
     firstNotificationTime: 첫 알림 전송 시간
     lastNotificationTIme: 마지막 알림 전송 시간
