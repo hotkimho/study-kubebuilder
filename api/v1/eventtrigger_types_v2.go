@@ -88,11 +88,11 @@ type ConditionStatus struct {
 type ResourceEvent struct {
 	// +kubeubuilder:validation:MinLength=0
 	// 리소스 버전
-	apiVersion string `json:"apiVersion"`
+	ApiVersion string `json:"apiVersion"`
 
 	// +kubeubuilder:validation:MinLength=0
 	// 리로스 종류(kind)
-	kind string `json:"kind"`
+	Kind string `json:"kind"`
 
 	// 이벤트 리소스 오브젝트(POD, Deployment, ClusterInfo, Event)
 	EventSource `json:",inline"`
@@ -217,11 +217,11 @@ type StatusCondition struct {
 type EventCondition struct {
 	// +optional
 	// 값에 대한 조건
-	ValueCondition *ValueCondition `json:"valueCondition,omitempty"`
+	ValueCondition []ValueCondition `json:"valueCondition,omitempty"`
 
 	// +optional
 	// 상태에 대한 조건
-	StatusCondition *StatusCondition `json:"statusCondition,omitempty"`
+	StatusCondition []StatusCondition `json:"statusCondition,omitempty"`
 }
 
 type EventMessage struct {

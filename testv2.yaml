@@ -4,96 +4,82 @@ metadata:
   name: test-trigger
 spec:
   resourceEvents:
-  # case 1 Event의 type 필드가 Warning인 경우
-  - apiVersion: v1
-    kind: event
-    event:
-      resource:
-        namespace: default
-        name: ""
-        labels:
-          app: gateway
-      conditions: # 조건이 여러 개 인 경우(OR로 처리 즉 각각 검사)
-      - statusCondition:
-        field: type
-        operator: Equals
-        status: Warning
-      message:
-        level: warning
-        message: "message"
-      notifications:
-      - type: mattermost
-        url: "mattermost-webhook-url"
+    # case 1 Event의 type 필드가 Warning인 경우
+    - apiVersion: v1
+      kind: event
+      event:
+        resource:
+          namespace: default
+        conditions: # 조건이 여러 개 인 경우(OR로 처리 즉 각각 검사)
+          - statusCondition:
+              field: type
+              operator: Equals
+              status: Warning
+        message:
+          level: warning
+          message: "message"
+        notifications:
+          - type: mattermost
+            url: "mattermost-webhook-url"
 
     # case 2 ClusterInfo의 status.phase 필드가 NotReady로 변경된 경우
-  - apiVersion: v1
-    kind: clusterInfo
-    clusterInfo:
-      resource:
-        namespace: default
-        name: ClusterInfo
-      conditions:
-      -statusCondition:
-        field: status.phase
-        operator: Equals
-        status: NotReady
-      message:
-        level: warning
-        message: "message"
-      notifications:
-      - type: mattermost
-        url: "mattermost-webhook-url"
+    - apiVersion: v1
+      kind: clusterInfo
+      clusterInfo:
+        resource:
+          namespace: default
+          name: ClusterInfo
+        conditions:
+          - statusCondition:
+              field: status.phase
+              operator: Equals
+              status: NotReady
+        message:
+          level: warning
+          message: "message"
+        notifications:
+          - type: mattermost
+            url: "mattermost-webhook-url"
 
     # case 3 acc-system namespace에서 member-agent라는 이름의 Deployment의 image 필드가 특정 버전 보다 낮은 경우
-  - apiVersion: apps/v1
-    kind: deployment
-    deployment:
-      resource:
-        apiVersion: apps/v1
-        namespace: acc-system
-        name: member-agent
-      conditions:
-      - valueCondition:
-        field: spec.template.spec.containers[0].image
-        operator: LessThan
-        value: "image-version"
-      message:
-        level: warning
-        message: "message"
-      notifications:
-      - type: mattermost
-        url: "mattermost-webhook-url"
+    - apiVersion: apps/v1
+      kind: deployment
+      deployment:
+        resource:
+          apiVersion: apps/v1
+          namespace: acc-system
+          name: member-agent
+        conditions:
+          - valueCondition:
+              field: spec.template.spec.containers[0].image
+              operator: LessThan
+              value: "image-version"
+        message:
+          level: warning
+          message: "message"
+        notifications:
+          - type: mattermost
+            url: "mattermost-webhook-url"
 
     # case 4 acc-global namespace에서 app: gateway 라벨을 가진 Pod의 status.phase 필드가 Running이 아닌 경우
-  - apiVersion: v1
-    kind: pod
-    pod:
-      resource:
-        apiVersion: v1
-        namespace: acc-global
-        labels:
-        app: gateway
-      conditions:
-      - statusCondition:
-        field: status.phase
-        operator: NotEquals
-        value: Running
-      message:
-        level: warning
-        message: "message"
-      notifications:
-      - type: mattermost
-        url: "mattermost-webhook-url"
-
-status:
-  # 리소스 상태
-  resourceStatuses:
-    - name: <resource-name>
-      kind: <kind>
-      status: <현재 리소스 상태>
-      reported: <boolean(알림 전송 성공/실패)>
-      lastReportTime : <마지막 알림 전송 시간>
-      firstReportTime : <첫 알림 전송 시간>
-      ...
+    - apiVersion: v1
+      kind: pod
+      pod:
+        resource:
+          apiVersion: v1
+          namespace: acc-global
+          labels:
+          app: gateway
+        conditions:
+          - statusCondition:
+              field: status.phase
+              operator: NotEquals
+              value: Running
+        message:
+          level: warning
+          message: "message"
+        notifications:
+          - type: mattermost
+            url: "mattermost-webhook-url"
 
 

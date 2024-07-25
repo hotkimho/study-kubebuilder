@@ -18,14 +18,13 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/jsonpath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	batchv1 "tutorial.kubebuilder.io/project/api/v1"
@@ -52,7 +51,6 @@ type TestPodReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.4/pkg/reconcile
 func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
 	//var testPod batchv1.TestPod
 	//if err := r.Get(ctx, req.NamespacedName, &testPod); err != nil {
 	//	log.Log.Error(err, "unable to fetch TestPod")
@@ -71,6 +69,8 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// jsonpath를 사용하여 testpod의 .status.phase 값 가져오기
+
 	switch testPod.Status.Phase {
 	case "":
 		testPod.Status.Phase = "Pending"
@@ -85,7 +85,69 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Log.Error(err, "unable to update TestPod status")
 		return ctrl.Result{}, err
 	}
-	//
+
+	fmt.Println(testPod.Status.Phase)
+	/*
+	 // Pod 객체를 JSON으로 변환
+	    jsonData, err := json.Marshal(pod)
+	    if err != nil {
+	        log.Fatalf("Error marshalling pod to JSON: %v", err)
+	    }
+
+	    // JSONPath를 사용하여 .status.phase 값 추출
+	    jpath := jsonpath.New("example")
+	    err = jpath.Parse("{.status.phase}")
+	    if err != nil {
+	        log.Fatalf("Error parsing JSONPath: %v", err)
+	    }
+
+	    // JSON 데이터를 인터페이스로 변환
+	    var data interface{}
+	    err = json.Unmarshal(jsonData, &data)
+	    if err != nil {
+	        log.Fatalf("Error unmarshalling JSON: %v", err)
+	    }
+
+	    // JSONPath 결과 찾기
+	    results, err := jpath.FindResults(data)
+	    if err != nil {
+	        log.Fatalf("Error finding results with JSONPath: %v", err)
+	    }
+	*/
+
+	jsonData, err := json.Marshal(testPod)
+	if err != nil {
+		log.Log.Error(err, "unable to update TestPod status")
+		return ctrl.Result{}, err
+	}
+
+	jsonPath := jsonpath.New("example")
+	if err != nil {
+		log.Log.Error(err, "unable to update TestPod status")
+		return ctrl.Result{}, err
+	}
+
+	err = jsonPath.Parse("{.status.phase}")
+	if err != nil {
+		log.Log.Error(err, "unable to update TestPod status")
+		return ctrl.Result{}, err
+	}
+
+	var data interface{}
+	err = json.Unmarshal(jsonData, &data)
+	if err != nil {
+		log.Log.Error(err, "unable to update TestPod status")
+		return ctrl.Result{}, err
+	}
+
+	results, err := jsonPath.FindResults(data)
+	if err != nil {
+		log.Log.Error(err, "unable to update TestPod status")
+		return ctrl.Result{}, err
+	}
+
+	fmt.Println("rrr : ", results[0][0].Interface())
+
 	//newTestPod := batchv1.TestPod{
 	//	ObjectMeta: metav1.ObjectMeta{
 	//		Namespace: "default",
@@ -137,11 +199,11 @@ func (r *TestPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *TestPodReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&batchv1.TestPod{}).
-		WithEventFilter(predicate.Funcs{
-			CreateFunc: createPredicate,
-			UpdateFunc: updatePredicate,
-			DeleteFunc: deletePredicate,
-		}).
+		//WithEventFilter(predicate.Funcs{
+		//	CreateFunc: createPredicate,
+		//	UpdateFunc: updatePredicate,
+		//	DeleteFunc: deletePredicate,
+		//}).
 		Complete(r)
 }
 
