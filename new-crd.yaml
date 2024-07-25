@@ -4,8 +4,9 @@ metadata:
   name: event-trigger
 spec:
   suspend: boolean # 트리거 일시 정지
-  repeatable: boolean # 알림을 한번 전송 후, 다시 보낼것인지 유무
-  minDelaySeconds: # 한번 알람이 보내진 후, 설정된 초 이후로 알람을 보장 (status의 마지막 전송 시간을 기준으로 계산)
+  minDelaySeconds: # 리소스별로 한번 알람이 보내진 후, 설정된 초 이후로 알람을 보장 (status의 마지막 전송 시간을 기준으로 계산)
+  retryPolicy: always(항상 알림 보냄) / onFailure(전송이 오류인 경우 다시 알림 전송) / never(알림이 한번 전송되면 다시 보내지 않음)
+  timeoutSeconds: 알림 timeout
 
   resource:
     scope: cluster / namespace # (필수값) (기본값은 namespace)
@@ -17,11 +18,11 @@ spec:
 
     labelSelector:
       key: key
-      operator: equal / in / notIn
+      operator: equal / in / notIn / not
       values: [ ]  # 비어 있으면 key에 해당하는 모든 리소스에 대하여 opertator(!제외) 상관없이 다 조회
     annotationSelector:
       key: key
-      operator: equal / in / notIn
+      operator: equal / in / notIn / not
       values: [ ]  # 비어 있으면 key에 해당하는 모든 리소스에 대하여 opertator(!제외) 상관없이 다 조회
 
   rule:
@@ -33,8 +34,8 @@ spec:
     level: info/warning/error  #(필수값)
     message: message # 매터모스트 본문 내용 or 메일 본문 내용
     # 메시지의 내용에는 리소스의 정보들이 포함됨
-  receiver:
-  - gmail:
+  receiverConfig:
+    gmail:
       smtpServer: smtp-server
       smtpPort: 587
       username: userEmail
@@ -42,21 +43,30 @@ spec:
       fromAddress: fromuser@mantech.co.kr
       toAddress: touser@mantech.co.kr
       subject: 제목
-      message: 메일 내용(리소스에 대한 에러 정보가 포함됨)
-  - mattermost:
+      content: 메일 내용(리소스에 대한 에러 정보가 포함됨)
+    mattermost:
       url: mattermost-webhook-url
 
-
 status:
-  phase: Running # 트리거가 동작중인지 멈춰있는지(이건 필요한지 확인)
-  resources: # 각각의 리소스에 대한 정보
+  notificationCount: 총 알림 전송 횟수
+  conditions:
+  - type: Ready
+    status: "True"
+    lastTransitionTime: 레디로 전환된 시간
+    message:
+    reason:
+  resourceStatus: # 각각의 리소스에 대한 정보
   - name: resource-name
-    uid: resource-uid
-    repotred: 전송 여부
+    resourceVersion: resource-versiom
+    notificationSent: 전송 여부
+    firstNotificationTime: 첫 알림 전송 시간
+    lastNotificationTIme: 마지막 알림 전송 시간
+    notificationCount: 알림 전송 횟수
+    responseStatus: # 매타모스트나, 구글에 요청을 보내고 받은 응답
+      statusCode: response-code
+      errorMessage: error-message
 
-  receverss: # 매타모스트나, 구글에 요청을 보내고 받은 응답
-  - code: response-code
-    message: error-message
+
 
 
 
